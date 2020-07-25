@@ -1,0 +1,51 @@
+plugins {
+	id "java"
+	id "checkstyle"
+	id "io.spring.nohttp" version "0.0.3.RELEASE"
+	id "com.palantir.graal" version "0.7.1-10-gd3690b4"
+}
+
+ext {
+	picocliVersion = "4.4.0"
+}
+
+group "org.adoptium"
+version "1.0.0-SNAPSHOT"
+
+repositories {
+	mavenCentral()
+}
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+compileJava {
+	options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
+}
+
+graal {
+	mainClass 'org.adoptium.rpmimport.Main'
+	outputName 'rpmimport'
+	graalVersion '20.1.0'
+	javaVersion '11'
+}
+
+dependencies {
+	compileOnly "org.jetbrains:annotations:19.0.0"
+	implementation "info.picocli:picocli:$picocliVersion"
+	annotationProcessor "info.picocli:picocli-codegen:$picocliVersion"
+
+	testImplementation "org.junit.jupiter:junit-jupiter:5.6.2"
+	testImplementation "org.assertj:assertj-core:3.16.1"
+}
+
+test {
+	useJUnitPlatform()
+	testLogging {
+		events "passed", "skipped", "failed"
+	}
+}
+
+checkstyle {
+	toolVersion = "8.30"
+}
