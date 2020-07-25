@@ -49,3 +49,9 @@ test {
 checkstyle {
 	toolVersion = "8.30"
 }
+
+task createAssets(type: Zip, dependsOn: nativeImage) {
+	from nativeImage.outputs.files
+	include "**/*"
+	archiveName "${project.name}-${project.version}.zip"
+}
