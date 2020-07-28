@@ -173,12 +173,44 @@ class MainTest {
 		StringWriter stderrWriter = new StringWriter();
 		cmd.setErr(new PrintWriter(stderrWriter));
 
-		int exitCode = cmd.execute(source.toString(), destination.toString());
+		int exitCode = cmd.execute("--no-sign", source.toString(), destination.toString());
 
 		assertThat(exitCode).isEqualTo(0);
 		assertThat(stderrWriter.toString()).startsWith("File already exists in repository, ignoring:");
 		assertThat(source.toFile().list()).containsOnly("hello-world-1-1.x86_64.rpm");
 		assertThat(destination.toFile().list()).containsOnly("hello-world-1-1.x86_64.rpm");
 		assertThat(existingRpm).hasContent("Hello");
+	}
+
+	@Test
+	void skipsNonRpmFilesAndLeavesThemInSourceFolder(@TempDir Path tempDir) throws Exception {
+		var source = Paths.get(tempDir.toString(), "source");
+		var destination = Paths.get(tempDir.toString(), "destination");
+
+		Files.createDirectory(source);
+		Files.createDirectory(destination);
+
+		var helloWorldRpm = Paths.get(this.getClass().getResource("/hello-world-1-1.x86_64.rpm").toURI());
+		Files.copy(helloWorldRpm, Paths.get(source.toString(), "hello-world-1-1.x86_64.rpm"));
+		var someTextFile = Paths.get(source.toString(), "someFile.txt");
+		Files.createFile(someTextFile);
+
+		assertThat(source.toFile().list()).containsOnly("hello-world-1-1.x86_64.rpm", "someFile.txt");
+		assertThat(destination.toFile().list()).isEmpty();
+
+		Main app = new Main();
+		CommandLine cmd = new CommandLine(app);
+
+		StringWriter stdoutWriter = new StringWriter();
+		cmd.setOut(new PrintWriter(stdoutWriter));
+		StringWriter stderrWriter = new StringWriter();
+		cmd.setErr(new PrintWriter(stderrWriter));
+
+		int exitCode = cmd.execute("--no-sign", source.toString(), destination.toString());
+
+		assertThat(exitCode).isEqualTo(0);
+		assertThat(stderrWriter.toString()).isEmpty();
+		assertThat(source.toFile().list()).containsOnly("someFile.txt");
+		assertThat(destination.toFile().list()).containsOnly("hello-world-1-1.x86_64.rpm");
 	}
 }
